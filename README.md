@@ -51,23 +51,34 @@ Este projeto participa da **[Rinha de Backend 2025](https://github.com/zanfrance
 
 - Docker e Docker Compose
 - Git
+- PHP [optional para desenvolvimento local]
+- Composer [optional para desenvolvimento local]
 
-### Desenvolvimento
+### Para testar
 
 ```bash
 # Clone o repositório
 git clone <seu-repo>
 cd payment-proxy-solution
-
-# Iniciar ambiente de desenvolvimento
-docker-compose -f docker-compose.dev.yml up --build -d
 ```
 
-### Produção (Teste Final)
+### Produção
 
 ```bash
 # Iniciar ambiente de produção
 docker-compose up --build
+```
+
+### Desenvolvimento
+
+```bash
+# Instalar dependencias
+cd solution
+composer install
+cd ..
+
+# Iniciar ambiente de desenvolvimento
+docker-compose -f docker-compose.dev.yml up --build -d
 ```
 
 ## 📋 Endpoints
