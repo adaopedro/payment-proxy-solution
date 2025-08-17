@@ -1,0 +1,85 @@
+x-service-templates:
+  solution: &base
+    image: adaopedro/payment-proxy-solution:latest
+    restart: "unless-stopped"
+    networks:
+      - payment-proxy
+      - payment-processor
+    environment:
+      - APP_PORT=${APP_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - PROCESSOR_DEFAULT_URL=${PROCESSOR_DEFAULT_URL}
+      - PROCESSOR_FALLBACK_URL=${PROCESSOR_FALLBACK_URL}
+services:
+  payment-proxy-api-1:
+    <<: *base
+    container_name: payment-proxy-api-1
+    hostname: payment-proxy-api-1
+    command: php http/entrypoint.php
+    depends_on:
+      - redis
+      - payment-proxy-worker-payments
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: "70MB"
+  payment-proxy-api-2:
+    <<: *base
+    container_name: payment-proxy-api-2
+    hostname: payment-proxy-api-2
+    command: php http/entrypoint.php
+    depends_on:
+      - redis
+      - payment-proxy-worker-payments
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: "70MB"
+  redis:
+    image: redis:latest
+    networks:
+      - payment-proxy
+      - payment-processor
+    restart: "unless-stopped"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: "100MB"
+  payment-proxy-worker-payments:
+    <<: *base
+    container_name: payment-proxy-worker-payments
+    command: php workers/payments/index.php
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: "0.40"
+          memory: "90MB"
+  nginx: 
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 9999:9999
+    depends_on:
+      - payment-proxy-api-1
+      - payment-proxy-api-2
+    networks:
+      - payment-proxy
+      - payment-processor
+    restart: "unless-stopped"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.20"
+          memory: "20MB"
+networks:
+  payment-proxy:
+    driver: bridge
+  payment-processor:
+    external: true
